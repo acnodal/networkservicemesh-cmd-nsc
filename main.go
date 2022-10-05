@@ -27,6 +27,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
@@ -80,6 +81,13 @@ import (
 	"github.com/networkservicemesh/sdk/pkg/tools/tracing"
 
 	"github.com/networkservicemesh/cmd-nsc/internal/config"
+	"github.com/networkservicemesh/cmd-nsc/internal/masq"
+)
+
+const (
+	// If there's a file with this name then we'll pass the contents of
+	// it to iptables-restore.
+	IPTABLES_SAVEFILE_FILENAME = "/etc/cck/iptables"
 )
 
 func main() {
@@ -303,6 +311,19 @@ func main() {
 		}()
 
 		logger.Infof("successfully connected to %v. Response: %v", u.NetworkService(), resp)
+	}
+
+	// ********************************************************************************
+	// Add iptables rules (if present)
+	// ********************************************************************************
+	if saveFile, err := ioutil.ReadFile(IPTABLES_SAVEFILE_FILENAME); err == nil {
+		masqer := masq.NewMasqDaemon(masq.NewMasqConfig(false))
+		if err := masqer.RestoreIPv4(saveFile); err != nil {
+			logger.Errorf("restoring iptables saveFile", err)
+		}
+		logger.Infof("iptables saveFile restored:%s", string(saveFile))
+	} else {
+		logger.Infof("iptables saveFile not found: %v", err)
 	}
 
 	// Wait for cancel event to terminate

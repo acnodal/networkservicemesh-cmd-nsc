@@ -21,6 +21,6 @@ FROM test as debug
 CMD dlv -l :40000 --headless=true --api-version=2 test -test.v ./...
 
 FROM alpine as runtime
-RUN apk --no-cache add nftables iptables
+RUN apk --no-cache add nftables iptables ip6tables
 COPY --from=build /bin/app /bin/app
 ENTRYPOINT ["/bin/app"]

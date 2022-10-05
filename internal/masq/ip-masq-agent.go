@@ -311,6 +311,12 @@ func (m *MasqDaemon) SyncChainIPv4(nsName string, ingress []v1.LoadBalancerIngre
 	return nil
 }
 
+// RestoreIPv4 calls iptables-restore to restore the complete set of
+// IPv4 rules. Returns the result of the call to iptables-restore.
+func (m *MasqDaemon) RestoreIPv4(rules []byte) error {
+	return m.iptables.RestoreAll(rules, utiliptables.NoFlushTables, utiliptables.NoRestoreCounters)
+}
+
 // DeleteChain deletes chain. The error can be caused by either IPV4
 // or IPV6.
 func (m *MasqDaemon) DeleteChains(nsName string) error {
